@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <style id="stndz-style"></style>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atlanta Uber</title>
+    
+    <link href={{ url_for('static', filename='css/chart-style.css') }} rel="stylesheet" media="screen">
+    <!-- Leaflet JS & CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+   integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+   crossorigin=""/>
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+   <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+   integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+   crossorigin=""></script>
+    
+     <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css?family=Sanchez" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css"
+  integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
+  crossorigin=""/>
+
+  <!-- Icons -->
+  <link rel="stylesheet" type="text/css" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <!--  <link rel="stylesheet" href="leaflet-extramarkers.css"> -->
+  <link href={{ url_for('static', filename='css/leaflet-extramarkers.css') }} rel="stylesheet" media="screen">
+
+    <!-- d3 JavaScript -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <!-- Our CSS -->
+    <link href={{ url_for('static', filename='css/style.css') }} rel="stylesheet" media="screen">
+    <!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+    <script async="" src="//www.google-analytics.com/analytics.js"></script>
+      <script src={{ url_for('static', filename='js/Chart.min.js') }}></script>
+    <style type="text/css">
+        /* Chart.js */
+        @-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
+	
+	<script type="text/javascript" src="static/js/Utils.js"></script>
+  </head>
+  
+<body>
+	<div class="content">
+	    <div id="chart">
+       {{places[0]}}
+        {{times}}
+	        {% for item in places %}
+	        {{item}}
+	        {% endfor %}
+	    </div>
+	    
+	    
+		<div class="wrapper">
+		<div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+		<div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div>
+		</div>
+		<div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+		<div style="position:absolute;width:200%;height:200%;left:0; top:0"></div>
+		</div>
+		</div>
+			<canvas id="chart-0" width="800" height="400" class="chartjs-render-monitor" style="display: block; width: 800px; height: 400px;"></canvas>
+		</div>
+		<div class="toolbar">
+			<button onclick="togglePropagate(this)" class="">Propagate</button>
+			<button onclick="toggleSmooth(this)" class="">Smooth</button>
+			<button onclick="randomize(this)">Randomize</button>
+		</div>
+		<div id="chart-analyser" class="analyser"><table><tbody><tr><th>Dataset</th><th>Fill</th><th>Target (visibility)</th></tr><tr><td><b>0</b></td><td>undefined</td><td>boundary "origin"</td></tr><tr><td><b>1</b></td><td>"-1"</td><td>dataset 0</td></tr><tr><td><b>2</b></td><td>1</td><td>dataset 1</td></tr><tr><td><b>3</b></td><td>"-1"</td><td>dataset 2</td></tr><tr><td><b>4</b></td><td>"-1"</td><td>dataset 3</td></tr><tr><td><b>5</b></td><td>"+2"</td><td>dataset 7</td></tr><tr><td><b>6</b></td><td>false</td><td>none</td></tr><tr><td><b>7</b></td><td>8</td><td>dataset 8</td></tr><tr><td><b>8</b></td><td>"end"</td><td>boundary "end"</td></tr></tbody></table></div>
+	</div>
+
+	<script>
+		var presets = window.chartColors;
+		var utils = Samples.utils;
+		var inputs = {
+			min: 20,
+			max: 80,
+			count: 8,
+			decimals: 2,
+			continuity: 1
+		};
+        console.log(presets)
+
+		function generateData() {
+			return utils.numbers(inputs);
+		}
+
+		function generateLabels() {
+			return utils.months({count: inputs.count});
+		}
+
+		utils.srand(42);
+
+		var data = {
+			labels: [ {% for item in times %}
+	        "{{item}}",
+	        {% endfor %}],
+			datasets: [{
+				backgroundColor: utils.transparentize(presets.red),
+				borderColor: presets.red,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[0] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label: "{{places[0]}}",
+                fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.orange),
+				borderColor: presets.orange,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[1] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label: "{{places[1]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.yellow),
+				borderColor: presets.yellow,
+				data:  [ {% for item in chartdata %}
+                       {% if item[0] == places[2] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label:  "{{places[2]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.green),
+				borderColor: presets.green,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[3] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label:  "{{places[3]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.blue),
+				borderColor: presets.blue,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[4] %}
+                            {{item[2]}},
+                       {% endif %}
+                            {% endfor %}],
+				label: "{{places[4]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.grey),
+				borderColor: presets.grey,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[5] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label: "{{places[5]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.purple),
+				borderColor: presets.purple,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[6] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label:  "{{places[6]}}",
+				fill: false
+			}, {
+				backgroundColor: utils.transparentize(presets.red),
+				borderColor: presets.red,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[7] %}
+                        {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ],
+				label:  "{{places[7]}}",
+				fill: false
+			}]
+		};
+        console.log(data.labels)
+		var options = {
+			maintainAspectRatio: false,
+			spanGaps: false,
+			elements: {
+				line: {
+					tension: 0.000001
+				}
+			},
+			scales: {
+				yAxes: [{
+					stacked: false
+				}]
+			},
+			plugins: {
+				filler: {
+					propagate: false
+				},
+				'samples-filler-analyser': {
+					target: 'chart-analyser'
+				}
+			}
+		};
+
+		var chart = new Chart('chart-0', {
+			type: 'line',
+			data: data,
+			options: options
+		});
+
+		// eslint-disable-next-line no-unused-vars
+		function togglePropagate(btn) {
+			var value = btn.classList.toggle('btn-on');
+			chart.options.plugins.filler.propagate = value;
+			chart.update();
+		}
+
+		// eslint-disable-next-line no-unused-vars
+		function toggleSmooth(btn) {
+			var value = btn.classList.toggle('btn-on');
+			chart.options.elements.line.tension = value ? 0.4 : 0.000001;
+			chart.update();
+		}
+
+		// eslint-disable-next-line no-unused-vars
+		function randomize() {
+			chart.data.datasets.forEach(function(dataset) {
+				dataset.data = generateData();
+			});
+			chart.update();
+		}
+	</script>
+
+
+</body>
+  
+  <!-- <body>
+   
+    <!-- chart div 
+   
+    <div id="chart"></div>
+    
+    <!-- D3 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+
+  <!-- MomentJS 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
+
+  <!-- Leaflet JavaScript 
+  <script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js"
+  integrity="sha512-tAGcCfR4Sc5ZP5ZoVz0quoZDYX5aCtEm/eu1KhSLj2c9eFrylXZknQYmxUssFaVJKvvc0dJQixhGjG2yXWiV9Q=="
+  crossorigin=""></script>
+
+  <!-- Icons 
+  <script src={{ url_for('static', filename='js/leaflet-extramarkers.js') }}></script>
+  <script src={{ url_for('static', filename='js/leaflet-rotatedmarkers.js') }}></script>
+  <script src={{ url_for('static', filename='js/Chart.bundle.min.js') }}></script>
+  <script src={{ url_for('static', filename='js/Chart.min.js') }}></script>
+  <!-- <script src="leaflet-extramarkers.js"></script> 
+
+  <!-- polyfill.io is library for using newer JavaScript features in older browers (such as Object.assign) 
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    
+    
+    <!-- API key 
+    <!-- <script type="text/javascript" src="static/js/config.js"></script> 
+      <!-- JS  
+   <script src={{ url_for('static', filename='js/logic.js') }}></script>
+    
+  </body> -->
+</html>
